@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-bs-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Logística - [Nome da Empresa]</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <style>
+        :root, [data-bs-theme="light"] {
+            --bs-body-bg: #f4f7f6;
+            --bs-sidebar-bg: #ffffff;
+            --bs-sidebar-color: #333;
+        }
+        [data-bs-theme="dark"] {
+            --bs-body-bg: #1e1e2d;
+            --bs-sidebar-bg: #27293d;
+            --bs-card-bg: #27293d;
+            --bs-body-color: #d1d9e6;
+            --bs-sidebar-color: #d1d9e6;
+        }
+        .sidebar {
+            width: 250px;
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            padding: 20px;
+            background-color: var(--bs-sidebar-bg);
+            color: var(--bs-sidebar-color);
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+        }
+        .main-content {
+            margin-left: 250px; /* Compensa o tamanho da sidebar */
+            padding: 20px;
+        }
+        .logo-img { max-height: 40px; margin-right: 10px; }
+    </style>
+</head>
+<body class="d-flex" data-bs-theme="light">
+
+    <div class="sidebar d-flex flex-column">
+        <div class="d-flex align-items-center mb-4 border-bottom pb-3">
+            <img src="[URL_DA_SUA_LOGO]" alt="Logo Empresa" class="logo-img">
+            <h5 class="mb-0">Logística PRO</h5>
+        </div>
+
+        <ul class="nav nav-pills flex-column mb-auto">
+            <li class="nav-item">
+                <a href="#" class="nav-link active" aria-current="page"><i class="fas fa-truck me-2"></i> Rastreamento</a>
+            </li>
+            <li>
+                <a href="#" class="nav-link"><i class="fas fa-chart-line me-2"></i> Relatórios</a>
+            </li>
+            <li>
+                <a href="#" class="nav-link"><i class="fas fa-cog me-2"></i> Configurações</a>
+            </li>
+        </ul>
+
+        <div class="mt-auto border-top pt-3">
+            <button class="btn btn-outline-secondary w-100" id="theme-toggle">
+                <i class="fas fa-sun me-2" id="theme-icon"></i> Alternar Tema
+            </button>
+        </div>
+    </div>
+
+    <div class="main-content flex-grow-1">
+        <div class="container-fluid">
+            <h1 class="mb-4">Registro de Etapas</h1>
+
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <i class="fas fa-info-circle me-2"></i> Status do Envio
+                </div>
+                <div class="card-body">
+                    <p class="fs-5 mb-1">Lote Mestre: **158**</p>
+                    <p class="fs-5 mb-3">Filial Ativa: **Filial 5**</p>
+                    <p class="text-muted small">Clique no botão para registrar o timestamp exato no PostgreSQL:</p>
+                    
+                    <div class="d-grid gap-3">
+                        <button class="btn btn-success status-button" onclick="registrarTempo('dt_lote_montado')">1. Lote Montado</button>
+                        <button class="btn btn-primary status-button" onclick="registrarTempo('dt_separada')">2. Mercadoria Separada</button>
+                        <button class="btn btn-info status-button" onclick="registrarTempo('dt_notas_emitidas')">3. Emissão de Notas</button>
+                        <button class="btn btn-warning status-button" onclick="registrarTempo('dt_saida')">4. Saída da Mercadoria</button>
+                        <button class="btn btn-danger status-button" onclick="registrarTempo('dt_conferencia_finalizacao')">5. Conferência Finalizada</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="log" class="alert alert-secondary mt-4 text-center" role="alert">
+                Aguardando ações...
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // 🚨 PASSO CRUCIAL: SUBSTITUA ESTES VALORES!
+        const SUPABASE_URL = 'https://zwvlzuzcxkzyowpmmpuh.supabase.co';
+        
+        // 1. CHAVE ANÔNIMA PÚBLICA (anon public key)
+        const SUPABASE_ANON_KEY = 'SUA_CHAVE_ANONIMA_PUBLICA_AQUI'; 
+        
+        // 2. ID DE REGISTRO DE TESTE (UUID)
+        const REGISTRO_ID_TESTE = 'INSIRA_UUID_DO_REGISTRO_DE_TESTE_AQUI'; 
+        
+        const NOME_TABELA = 'lotes_filial';
+        
+        // Inicializa o cliente Supabase
+        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // --- LÓGICA DE REGISTRO DE TEMPO (O SEU CORE) ---
+        async function registrarTempo(coluna_timestamp) {
+            if (SUPABASE_ANON_KEY.includes('SUA_CHAVE_ANONIMA_PUBLICA_AQUI') || REGISTRO_ID_TESTE.includes('INSIRA_UUID_DO_REGISTRO_DE_TESTE_AQUI')) {
+                 document.getElementById('log').className = 'alert alert-danger mt-4 text-center';
+                 document.getElementById('log').innerHTML = '🚨 ERRO: Por favor, configure a Chave e o ID no código JavaScript.';
+                 return;
+            }
+
+            const tempoAtual = new Date().toISOString();
+            const dadosParaAtualizar = {};
+            dadosParaAtualizar[coluna_timestamp] = tempoAtual;
+            
+            document.getElementById('log').className = 'alert alert-info mt-4 text-center';
+            document.getElementById('log').innerHTML = `<i class="fas fa-spinner fa-spin"></i> Registrando ${coluna_timestamp}...`;
+
+            const { error } = await supabase
+                .from(NOME_TABELA)
+                .update(dadosParaAtualizar)
+                .eq('id', REGISTRO_ID_TESTE);
+
+            if (error) {
+                document.getElementById('log').className = 'alert alert-danger mt-4 text-center';
+                document.getElementById('log').innerHTML = `❌ ERRO: Falha ao salvar. Mensagem: ${error.message}`;
+            } else {
+                document.getElementById('log').className = 'alert alert-success mt-4 text-center';
+                document.getElementById('log').innerHTML = `✅ SUCESSO! ${coluna_timestamp} salvo em ${tempoAtual}.`;
+            }
+        }
+        
+        // --- LÓGICA DE ALTERNÂNCIA DE TEMA (DARK/LIGHT MODE) ---
+        const themeToggleBtn = document.getElementById('theme-toggle');
+        const htmlElement = document.documentElement;
+        const themeIcon = document.getElementById('theme-icon');
+
+        function toggleTheme() {
+            const currentTheme = htmlElement.getAttribute('data-bs-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            
+            htmlElement.setAttribute('data-bs-theme', newTheme);
+            themeToggleBtn.className = newTheme === 'dark' ? 'btn btn-outline-light w-100' : 'btn btn-outline-secondary w-100';
+            
+            if (newTheme === 'dark') {
+                themeIcon.className = 'fas fa-moon me-2';
+            } else {
+                themeIcon.className = 'fas fa-sun me-2';
+            }
+            // Salva a preferência no navegador
+            localStorage.setItem('theme', newTheme); 
+        }
+
+        // Carrega a preferência ao iniciar
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            htmlElement.setAttribute('data-bs-theme', savedTheme);
+            toggleTheme(); // Chama para ajustar o botão/ícone corretamente
+        });
+
+        themeToggleBtn.addEventListener('click', toggleTheme);
+
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
